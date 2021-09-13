@@ -10,47 +10,46 @@
 # - Log in to your OpenShift cluster
 # - Create an OpenShift app from the image and expose it to the internet
 
-# ℹ️ Before you begin:
+# ℹ️ Configure your repository and the workflow with the following steps:
 # 1. Have access to an OpenShift cluster. Refer to https://www.openshift.com/try
-# 2. The project you wish to add this workflow to should have a Dockerfile.
-#   - If you don't have a Dockerfile at the repository root,
-#     or if it is named differently (eg. 'Containerfile'), see the buildah-build step.
-#   - The buildah-build step can be replaced with any other image build step if you do not wish to use a Dockerfile.
+# 2. Create the OPENSHIFT_SERVER and OPENSHIFT_TOKEN repository secrets. Refer to:
+#   - https://github.com/redhat-actions/oc-login#readme
+#   - https://docs.github.com/en/actions/reference/encrypted-secrets
+#   - https://cli.github.com/manual/gh_secret_set
+# 3. (Optional) Edit the top-level 'env' section as marked with '✏️' if the defaults are not suitable for your project.
+# 4. (Optional) Edit the build-image step to build your project.
+#    The default build type is by using a Dockerfile at the root of the repository,
+#    but can be replaced with a different file, a source-to-image build, or a step-by-step buildah build.
+# 5. Commit and push the workflow file to your default branch to trigger a workflow run.
 
-# ℹ️ This workflow requires some configuration.
-# 1. ✏️ Modify the top-level 'env' fields marked with the pencil ✏️ to fit your project.
-# 2. Create the OPENSHIFT_SERVER and OPENSHIFT_TOKEN secrets.
-#   - Refer to https://docs.github.com/en/actions/reference/encrypted-secrets
-#   - and https://github.com/redhat-actions/oc-login#readme
-# 3. Commit and push the workflow file to your default branch to trigger a workflow run.
-
-# 📖 Read a blog post explaining this workflow at https://www.openshift.com/blog/deploying-to-openshift-using-github-actions
-# ▶️ Watch a video of setting up this workflow at https://www.youtube.com/watch?v=6hgBO-1pKho
 # 👋 Visit our GitHub organization at https://github.com/redhat-actions/ to see our actions and provide feedback.
 
 name: OpenShift
 
 env:
+  # ✏️ EDIT your repository secrets to log into your OpenShift cluster and set up the context.
+  # See https://github.com/redhat-actions/oc-login#readme for how to retrieve these values.
+  # To get a permanent token, refer to https://github.com/redhat-actions/oc-login/wiki/Using-a-Service-Account-for-GitHub-Actions
+  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+  # ✏️ EDIT to set the kube context's namespace after login. Leave blank to use your user's default namespace.
+  OPENSHIFT_NAMESPACE: ""
+
   # ✏️ EDIT to set a name for your OpenShift app, or a default one will be detected.
   APP_NAME: ""
 
   # ✏️ EDIT with the port your application should be accessible on.
-  # If the container image exposes exactly one port, this can be left blank.
+  # If the container image exposes **exactly one** port, this can be left blank.
+  # Refer to the 'port' input of https://github.com/redhat-actions/oc-new-app
   APP_PORT: ""
 
-  # ✏️ EDIT your repository secrets to log into your OpenShift cluster and set up the context.
-  # See https://github.com/redhat-actions/oc-login#readme for how to retrieve these values.
-  OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
-  OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
-  # ✏️ (Optional) EDIT to set the kube context's namespace after login. Leave blank to use your user's default namespace.
-  OPENSHIFT_NAMESPACE: ""
-
-  # ✏️ (Optional) EDIT to change the image registry settings.
+  # ✏️ EDIT to change the image registry settings.
   # Registries such as GHCR, Quay.io, and Docker Hub are supported.
   IMAGE_REGISTRY: ghcr.io/${{ github.repository_owner }}
   IMAGE_REGISTRY_USER: ${{ github.actor }}
   IMAGE_REGISTRY_PASSWORD: ${{ github.token }}
-  # ✏️ (Optional) EDIT to specify custom tags for the container image.
+
+  # ✏️ EDIT to specify custom tags for the container image.
   IMAGE_TAGS: ""
 
 on:
@@ -130,8 +129,7 @@ jobs:
         image: ${{ env.APP_NAME }}
         tags: ${{ env.IMAGE_TAGS }}
 
-        # If you don't have a Dockerfile/Containerfile, see:
-        # https://github.com/redhat-actions/buildah-build#scratch-build-inputs
+        # If you don't have a Dockerfile/Containerfile, refer to https://github.com/redhat-actions/buildah-build#scratch-build-inputs
         # Or, perform a source-to-image build using https://github.com/redhat-actions/s2i-build
         # Otherwise, point this to your Dockerfile/Containerfile relative to the repository root.
         dockerfiles: |
